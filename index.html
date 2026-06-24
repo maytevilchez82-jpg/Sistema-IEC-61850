@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>IEC 61850 </title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/jstree@3.3.15/dist/themes/default/style.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jstree@3.3.15/dist/jstree.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="topbar">
+        <div class="logo"><img src="Nakama Logo.jpeg" alt="Nakama Logo"></div>
+        <div class="upload-inline">
+          <label><i class="fa fa-upload"></i> Subir archivo:</label>
+          <input type="file" id="fileInput" accept=".cid,.icd,.scd,.ssd,.xml" />
+        </div>
+            <div class="buttons">
+          <div class="header-meta-box" id="header-meta-box">
+            <div class="header-meta-item">
+              <span class="header-meta-label">Technical Key</span>
+              <span class="header-meta-value" id="meta-name">—</span>
+            </div>
+            <div class="header-meta-item">
+              <span class="header-meta-label">Tipo</span>
+              <span class="header-meta-value" id="meta-type">—</span>
+            </div>
+            <div class="header-meta-item">
+              <span class="header-meta-label">Fabricante</span>
+              <span class="header-meta-value" id="meta-manufacturer">—</span>
+            </div>
+            <div class="header-meta-item">
+              <span class="header-meta-label">Version</span>
+              <span class="header-meta-value" id="meta-config-version">—</span>
+            </div>
+          </div>
+          <button type="button" class="btn" onclick="expandAll()">
+            <i class="fa fa-folder-open"></i> Expandir
+          </button>
+          <button type="button" class="btn" onclick="collapseAll()">
+            <i class="fa fa-folder"></i> Contraer
+          </button>
+          <button type="button" class="btn green" onclick="exportDatasetStyled()">
+            <i class="fa fa-table"></i> Exportar Dataset
+          </button>
+          <button type="button" class="btn" onclick="uploadDatasetToSupabase()" style="background: #0f69c7; color: white;">
+            <i class="fa fa-cloud-upload-alt"></i> Subir a Supabase
+          </button>
+        </div>
+      </div>
+      <div class="main">
+        <div class="tree-panel">
+          <div class="card">
+            <div class="card-title">Árbol IEC 61850</div>
+            <div id="jstree"></div>
+            <div id="status"></div>
+          </div>
+        </div>
+        <div class="panel-resizer" id="panel-resizer"></div>
+        <div class="table-panel">
+          <div class="card" style="display: flex; flex-direction: column; height: 100%">
+            <div
+              style="
+                display: flex;
+                gap: 6px;
+                margin-bottom: 14px;
+                flex-shrink: 0;
+              "
+            >
+              <button class="tab-btn active" id="tab-node" onclick="switchTab('node')">
+                <i class="fa fa-info-circle"></i> Nodo
+              </button>
+              <button class="tab-btn" id="tab-dataset" onclick="switchTab('dataset')">
+                <i class="fa fa-table"></i> Dataset
+                <span
+                  id="ds-badge"
+                  style="
+                    background: #16a34a;
+                    color: white;
+                    border-radius: 10px;
+                    padding: 1px 7px;
+                    font-size: 11px;
+                    margin-left: 4px;
+                  "
+                  >0</span
+                >
+              </button>
+              <button class="tab-btn" id="tab-excel" onclick="switchTab('excel')">
+                <i class="fa fa-file-excel"></i> Excel
+              </button>
+              <button class="tab-btn" id="tab-enum" onclick="switchTab('enum')" style="display: none">
+                <i class="fa fa-list-alt"></i> EnumType
+                <span
+                  id="enum-badge"
+                  style="
+                    background: #7c3aed;
+                    color: white;
+                    border-radius: 10px;
+                    padding: 1px 7px;
+                    font-size: 11px;
+                    margin-left: 4px;
+                  "
+                  >0</span
+                >
+              </button>
+            </div>
+            <div id="panel-node" style="overflow: auto; flex: 1">
+              <div id="detail-container">
+                <div class="empty-msg">
+                  <i
+                    class="fa fa-mouse-pointer"
+                    style="
+                      font-size: 24px;
+                      margin-bottom: 8px;
+                      display: block;
+                      color: #334155;
+                    "
+                  ></i>
+                  Selecciona un nodo del árbol
+                </div>
+              </div>
+            </div>
+            <div id="panel-dataset" style="display: none; overflow: auto; flex: 1">
+              <div class="dataset-filter-bar">
+                <input
+                  id="ds-search"
+                  type="text"
+                  placeholder="🔍 Buscar..."
+                  oninput="requestDatasetFilter()"
+                  class="dataset-filter-input"
+                />
+                <select
+                  id="ds-filter-ied"
+                  onchange="requestDatasetFilter()"
+                  class="dataset-filter-select dataset-filter-select-ied"
+                >
+                  <option value="">— Todos los IED —</option>
+                </select>
+                <select
+                  id="ds-filter-ds"
+                  onchange="requestDatasetFilter()"
+                  class="dataset-filter-select dataset-filter-select-ds"
+                >
+                  <option value="">— Todos los DataSet —</option>
+                </select>
+              </div>
+              <table id="ds-table">
+                <thead>
+                  <tr>
+                    <th>IED</th>
+                    <th>LDInst</th>
+                    <th>Prefix</th>
+                    <th>LNClass</th>
+                    <th>LNInst</th>
+                    <th style="background: #1e4d8c">lnClass (CID)</th>
+                    <th>DOName</th>
+                    <th style="background: #2d3748">DAType</th>
+                    <th>DAName</th>
+                    <th>fc</th>
+                    <th>Tag</th>
+                    <th style="background: #065f46">CONCAT</th>
+                  </tr>
+                </thead>
+                <tbody id="ds-tbody">
+                  <tr>
+                    <td
+                      colspan="12"
+                      style="color: #64748b; text-align: center; padding: 20px"
+                    >
+                      Carga un archivo para ver el dataset
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="panel-excel" style="display: none; overflow: hidden; flex: 1; height: 100%;">
+              <div style="padding: 16px; height: 100%; box-sizing: border-box;">
+                <div style="display: flex; flex-direction: column; gap: 12px; height: 100%;">
+                  <div class="excel-card" style="background: linear-gradient(180deg, #0f3b2f 0%, #102c23 100%); border-color: #059669; display: flex; flex-direction: column; flex: 1; min-height: 0;">
+                    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
+                      <i class="fa fa-check-circle" style="color: #10b981; font-size: 16px;"></i>
+                      <span style="font-size: 14px; color: #bbf7d0; font-weight: 700; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);">Elementos Seleccionados del Árbol</span>
+                    </div>
+                    <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 8px;">Vista previa de lo que se exportará en Excel.</div>
+                    <div id="tree-selection-summary" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+                      <span style="background: rgba(15, 118, 110, 0.18); border: 1px solid rgba(45, 212, 191, 0.22); color: #ccfbf1; padding: 4px 8px; border-radius: 999px; font-size: 11px;">Resumen rápido</span>
+                      <span style="background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(148, 163, 184, 0.25); color: #e2e8f0; padding: 4px 8px; border-radius: 999px; font-size: 11px;">Selecciona nodos del árbol</span>
+                    </div>
+                    <div id="tree-selected-list" class="tree-selected-list">
+                      <div style="color: #64748b; text-align: center; padding: 20px;">
+                        Selecciona elementos del árbol para verlos aquí
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn"
+                      onclick="downloadTreeSelectionAsExcel()"
+                      style="background: #059669; font-size: 12px; width: 100%; margin-top: 10px; flex-shrink: 0;"
+                    >
+                      <i class="fa fa-file-excel"></i> Descargar Árbol Seleccionado
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+            <div id="panel-enum" style="display: none; overflow: hidden; flex: 1; height: 100%;">
+              <div style="padding: 16px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column;">
+                <div class="excel-card" style="background: linear-gradient(180deg, #2e1065 0%, #1e1040 100%); border-color: #7c3aed; display: flex; flex-direction: column; flex: 1; min-height: 0;">
+                  <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
+                    <i class="fa fa-list-alt" style="color: #c4b5fd; font-size: 16px;"></i>
+                    <span id="enum-panel-title" style="font-size: 14px; color: #e9d5ff; font-weight: 700;">EnumType</span>
+                    <span id="enum-panel-id" style="font-size: 12px; color: #a78bfa;"></span>
+                  </div>
+                  <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 8px;">Valores definidos para el EnumType seleccionado en el árbol.</div>
+                  <div id="enum-panel-content" style="flex: 1; min-height: 0; overflow: auto; border-radius: 10px; background: rgba(2, 6, 23, 0.28);">
+                    <div class="empty-msg">Selecciona un EnumType del árbol para ver sus valores</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="js/performance-optimizer.js?v=20260617rapido"></script>
+    <script src="js/ln-selection-optimizer.js?v=20260618rapido"></script>
+    <script src="js/script-rapido.js?v=20260617rapido"></script>
+    <script>
+      (function () {
+        var resizer   = document.getElementById('panel-resizer');
+        var left      = document.querySelector('.tree-panel');
+        var right     = document.querySelector('.table-panel');
+        var container = document.querySelector('.main');
+        if (!resizer || !left || !right || !container) return;
+
+        var dragging = false;
+        var startX   = 0;
+        var startW   = 0;
+        var MIN      = 160;
+
+        function startDrag(e) {
+          var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          dragging = true;
+          startX   = clientX;
+          startW   = left.getBoundingClientRect().width;
+
+          var shield = document.createElement('div');
+          shield.id  = 'splitter-shield';
+          shield.style.cssText =
+            'position:fixed;top:0;left:0;width:100vw;height:100vh;' +
+            'z-index:999999;cursor:col-resize;background:transparent;pointer-events:all;';
+          document.body.appendChild(shield);
+
+          document.body.style.userSelect = 'none';
+          resizer.classList.add('is-dragging');
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
+        function onMove(e) {
+          if (!dragging) return;
+          var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          var cw  = container.getBoundingClientRect().width;
+          var rw  = resizer.offsetWidth;
+          var max = cw - rw - MIN;
+          var w   = Math.min(Math.max(startW + (clientX - startX), MIN), max);
+          left.style.flex     = '0 0 ' + w + 'px';
+          left.style.width    = w + 'px';
+          left.style.minWidth = 'unset';
+          if (e.cancelable) e.preventDefault();
+        }
+
+        function endDrag() {
+          if (!dragging) return;
+          dragging = false;
+          var shield = document.getElementById('splitter-shield');
+          if (shield) shield.parentNode.removeChild(shield);
+          document.body.style.userSelect = '';
+          resizer.classList.remove('is-dragging');
+        }
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup',   endDrag);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend',  endDrag);
+
+        resizer.addEventListener('mousedown', startDrag);
+        resizer.addEventListener('touchstart', startDrag, { passive: false });
+      })();
+    </script>
+  </body>
+</html>

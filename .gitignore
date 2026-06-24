@@ -1,0 +1,11 @@
+# Ignore sistemas operativos
+.DS_Store
+Thumbs.db
+
+# Archivos temporales de editor
+*.log
+*.tmp
+*.swp
+
+# Node modules si se usa en el futuro
+node_modules/
