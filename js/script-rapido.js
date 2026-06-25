@@ -2683,6 +2683,46 @@ function exportWithSheetJS(filename, rows, sheetName) {
   downloadWB(wb, filename);
 }
 
+function exportDatasetTableToExcel() {
+  if (!Array.isArray(datasetDisplayRecords) || !datasetDisplayRecords.length) {
+    alert("No hay datos en la tabla para exportar.");
+    return;
+  }
+  var rows = [];
+  rows.push([
+    "IED",
+    "LDInst",
+    "Prefix",
+    "LNClass",
+    "LNInst",
+    "lnClass (CID)",
+    "DOName",
+    "DAType",
+    "DAName",
+    "fc",
+    "Tag",
+    "CONCAT"
+  ]);
+  datasetDisplayRecords.forEach(function (r) {
+    rows.push([
+      r.IED || "",
+      r.LDInst || "",
+      r.Prefix || "",
+      r.LNClass || "",
+      r.LNInst || "",
+      r.lnClassCID || "",
+      r.DOName || "",
+      r.DAType || "",
+      r.DAName || "",
+      r.fc || "",
+      r.Tag || "",
+      r.CONCAT || ""
+    ]);
+  });
+  exportWithSheetJS("CID_Dataset_Tabla.xlsx", rows, "Dataset");
+  setStatus("✓ Tabla Dataset exportada. " + datasetDisplayRecords.length + " filas.");
+}
+
 function getDatasetSummaryRows() {
   var counts = {};
   lnRecords.forEach(function (record) {
