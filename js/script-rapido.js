@@ -2689,6 +2689,8 @@ function exportDatasetTableToExcel() {
     return;
   }
   var rows = [];
+  rows.push([]);
+  rows.push([]);
   rows.push([
     "IED",
     "LDInst",
@@ -2865,7 +2867,6 @@ function exportDatasetStyled() {
       "CONCAT",
     ];
 
-    ws.addRow([]);
     var headerRow = ws.addRow(headers);
     headerRow.font = cidHeaderStyle.font;
     headerRow.fill = cidHeaderStyle.fill;
@@ -4150,13 +4151,34 @@ function getTreeSelectionExportMetaRows() {
   var versionEl = document.getElementById("meta-config-version");
   var now = new Date();
 
+  function formatDateWithMonthName(date) {
+    var monthNames = [
+      "enero",
+      "febrero",
+      "marzo",
+      "abril",
+      "mayo",
+      "junio",
+      "julio",
+      "agosto",
+      "septiembre",
+      "octubre",
+      "noviembre",
+      "diciembre",
+    ];
+    var day = date.getDate();
+    var month = monthNames[date.getMonth()] || "";
+    var year = date.getFullYear();
+    return day + "-" + month + "-" + year;
+  }
+
   return [
     ["Campo", "Valor"],
     ["Technical Key", technicalKeyEl ? String(technicalKeyEl.textContent || "").trim() : ""],
     ["Tipo", typeEl ? String(typeEl.textContent || "").trim() : ""],
     ["Fabricante", manufacturerEl ? String(manufacturerEl.textContent || "").trim() : ""],
     ["Versión", versionEl ? String(versionEl.textContent || "").trim() : ""],
-    ["Fecha", now.toLocaleDateString()],
+    ["Fecha", formatDateWithMonthName(now)],
     ["Hora", now.toLocaleTimeString()],
   ];
 }
