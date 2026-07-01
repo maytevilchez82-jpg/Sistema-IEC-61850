@@ -2942,17 +2942,51 @@ function buildSupabaseEndpoint(tableName) {
   return url + "/rest/v1/" + tableName;
 }
 
+function normalizeSupabaseRecord(record, technicalKey, type, manufacturer, configVersion) {
+  function value(keys) {
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      if (record[key] !== undefined && record[key] !== null) return record[key];
+    }
+    return "";
+  }
+
+  return {
+    ied: value(["IED", "ied"]),
+    dataset: value(["DataSet", "dataset"]),
+    ld_inst: value(["LDInst", "ldInst", "ld_inst"]),
+    prefix: value(["Prefix", "prefix"]),
+    ln_class: value(["LNClass", "lnClass", "ln_class"]),
+    ln_inst: value(["LNInst", "lnInst", "ln_inst"]),
+    lnode_type: value(["LNodeType", "lnodeType", "lnode_type"]),
+    ln_class_cid: value(["lnClassCID", "ln_class_cid"]),
+    do_name: value(["DOName", "doName", "do_name"]),
+    do_type: value(["DOType", "doType", "do_type"]),
+    da_name: value(["DAName", "daName", "da_name"]),
+    da_type: value(["DAType", "daType", "da_type"]),
+    fc: value(["fc", "FC"]),
+    tag: value(["Tag", "tag"]),
+    concat: value(["CONCAT", "concat"]),
+    technical_key: technicalKey,
+    type: type,
+    manufacturer: manufacturer,
+    config_version: configVersion,
+  };
+}
+
 function getSupabasePayload() {
+  var technicalKey = document.getElementById("meta-name") ? document.getElementById("meta-name").textContent : "";
+  var type = document.getElementById("meta-type") ? document.getElementById("meta-type").textContent : "";
+  var manufacturer = document.getElementById("meta-manufacturer") ? document.getElementById("meta-manufacturer").textContent : "";
+  var configVersion = document.getElementById("meta-config-version") ? document.getElementById("meta-config-version").textContent : "";
+
   return {
     source: "IEC61850-CID-Tool",
     timestamp: new Date().toISOString(),
-    meta: {
-      technicalKey: document.getElementById("meta-name") ? document.getElementById("meta-name").textContent : "",
-      type: document.getElementById("meta-type") ? document.getElementById("meta-type").textContent : "",
-      manufacturer: document.getElementById("meta-manufacturer") ? document.getElementById("meta-manufacturer").textContent : "",
-      configVersion: document.getElementById("meta-config-version") ? document.getElementById("meta-config-version").textContent : "",
-    },
-    records: lnRecords || [],
+    type: type,
+    manufacturer: manufacturer,
+    technical_key: technicalKey,
+    config_version: configVersion,
   };
 }
 
@@ -2969,7 +3003,16 @@ function uploadDatasetToSupabase() {
   setStatus("Subiendo datos a Supabase...");
 
   var endpoint = buildSupabaseEndpoint(SUPABASE_TABLE);
-  var payload = getSupabasePayload();
+  var payload = [{
+    source: "IEC61850-CID-Tool",
+    timestamp: new Date().toISOString(),
+    type: document.getElementById("meta-type") ? document.getElementById("meta-type").textContent : "",
+    manufacturer: document.getElementById("meta-manufacturer") ? document.getElementById("meta-manufacturer").textContent : "",
+    technical_key: document.getElementById("meta-name") ? document.getElementById("meta-name").textContent : "",
+    config_version: document.getElementById("meta-config-version") ? document.getElementById("meta-config-version").textContent : "",
+  }];
+
+  console.log("Supabase upload payload:", payload);
 
   fetch(endpoint, {
     method: "POST",
