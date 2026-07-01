@@ -1064,7 +1064,7 @@ input[type="checkbox"] {
 /* La celda de acción (✕) queda fija a la derecha; cuando además es parte
   del encabezado debe ganarle al resto de columnas sticky (top + right). */
 .cadena-preview-table thead .cadena-th-action {
-  position: sticky !important;
+  position: absolute; 
   top: 0 !important;
   right: 0 !important;
   left: auto !important;
