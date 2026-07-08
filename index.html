@@ -212,14 +212,6 @@
                     >
                       <i class="fa fa-file-excel"></i> Descargar Árbol Seleccionado
                     </button>
-                    <button
-                      type="button"
-                      class="btn"
-                      onclick="exportDatasetTableToExcel()"
-                      style="background: #0f69c7; font-size: 12px; width: 100%; margin-top: 10px; flex-shrink: 0;"
-                    >
-                      <i class="fa fa-file-excel"></i> Descargar Tabla Dataset
-                    </button>
                   </div>
 
                 </div>
@@ -296,7 +288,7 @@
           if (!dragging) return;
           dragging = false;
           var shield = document.getElementById('splitter-shield');
-          if (shield) shield.parentNode.removeChild(shield);
+          if (shield) shield.parentNode.removeChild(shield)
           document.body.style.userSelect = '';
           resizer.classList.remove('is-dragging');
         }
